@@ -1,0 +1,8 @@
+[web]
+port = ":8080"
+
+[blockchain]
+rpcUrl = "https://api.test.wemix.com"
+contractAddr = ""
+ownerAddr = ""
+privateKey = ""
