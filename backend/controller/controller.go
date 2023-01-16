@@ -3,6 +3,7 @@ package controller
 import (
 	conf "wba-bc-project-05/backend/config"
 	"wba-bc-project-05/backend/contracts"
+	"wba-bc-project-05/backend/model"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -19,6 +20,7 @@ type Controller struct {
 	contract     *contracts.Contracts
 	pk           string
 	ownerAddress string
+	md *model.Model
 }
 
 func NewCTL(cf *conf.Config) (*Controller, error) {

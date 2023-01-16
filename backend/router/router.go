@@ -51,6 +51,12 @@ func (p *Router) Idx() *gin.Engine {
 			token.POST("/transfer", p.ct.TransferToken)
 			token.POST("/transfer/from", p.ct.TransferTokenFrom)
 		}
+		login := v1.Group("/login")
+		{
+			login.POST("/signup", p.ct.SignUp)
+			login.POST("/signin", p.ct.SignIn)
+			login.POST("/logout", p.ct.LogOut)
+		}
 	}
 
 	return e
