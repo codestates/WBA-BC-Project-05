@@ -1,0 +1,13 @@
+[web]
+port = ":8080"
+
+[blockchain]
+#rpcUrl = "https://api.test.wemix.com"
+urlHttp = "http://172.25.80.1:7545"
+urlWs = "ws://172.25.80.1:7545"
+contractAddr = "0x6739E58463c79761e55a4fAc113F412faf0B87D3"
+ownerAddr = "0xAe843CD9Abadb1D8CE57aABE9B05af796c93fce2"
+privateKey = "6c828e746f66d8627497b0bcdf71e452520a71401a50049de2883204fb9f6471"
+
+[db]
+host = "mongodb://localhost:27017"

@@ -11,10 +11,14 @@ type Config struct {
 		Port string
 	}
 	Blockchain struct {
-		RpcUrl       string
+		UrlHttp      string
+		UrlWs        string
 		ContractAddr string
 		OwnerAddr    string
 		PrivateKey   string
+	}
+	DB struct {
+		Host string
 	}
 }
 
