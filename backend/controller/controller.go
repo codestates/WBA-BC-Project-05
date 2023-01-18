@@ -1,8 +1,8 @@
 package controller
 
 import (
-	conf "wba-bc-project-05/backend/config"
-	"wba-bc-project-05/backend/contracts"
+	conf "wba-bc-project-05/config"
+	"wba-bc-project-05/contracts"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -25,7 +25,7 @@ func NewCTL(cf *conf.Config) (*Controller, error) {
 	var err error
 	r := new(Controller)
 	// 블록체인 네트워크와 연결할 클라이언트를 생성하기 위한 rpc url 연결
-	r.client, err = ethclient.Dial(cf.Blockchain.RpcUrl)
+	r.client, err = ethclient.Dial(cf.Blockchain.UrlHttp)
 	if err != nil {
 		return r, err
 	}
