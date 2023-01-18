@@ -48,18 +48,18 @@ func NewModel(mgUrl string) (*Model, error) {
 	return r, nil
 }
 
-func (p *Model) SigninModel(id, pw string) (User, error) {
+func (p *Model) SigninModel(id, pw string) error {
 	opts := []*options.FindOneOptions{}
 	var filter bson.M
 	if id == "user_id" {
-		filter = bson.M{"user_id": id}
-	}
+		filter = bson.M{"pw": pw}
+	} 
 
 	var user User
 	if err := p.colUser.FindOne(context.TODO(), filter, opts...).Decode(&user); err != nil {
-		return user, err
+		return err
 	} else {
-		return user, nil
+		return nil
 	}
 }
 

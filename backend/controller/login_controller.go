@@ -25,13 +25,19 @@ func (p *Controller) RespError(c *gin.Context, body interface{}, status int, err
 	c.Abort()
 }
 
+type SigninParam struct {
+	ID    string    `json:"id" bson:"id"`
+	Pw    string    `json:"pw" bson:"pw"`
+}
+
 // Signin - 로그인 메서드
 func (p *Controller) SignIn(c *gin.Context) {
 	id := c.PostForm("id")
 	pw := c.PostForm("pw")
 
-	req := model.User{UserID: id, Pw: pw}
-	if err := p.md.SigninModel(req); err != nil {
+	User := model.User{}
+	req := SigninParam{ID: id, Pw: pw}
+	if err := p.md.SigninModel(id, pw); err != nil {
 		p.RespError(c, nil, http.StatusUnprocessableEntity, "parameter not found", err)
 		return
 	}
@@ -43,7 +49,7 @@ func (p *Controller) SignIn(c *gin.Context) {
 	})
 	c.Next()
 
-	refreshToken, err := jwt.CreateRefreshToken(req.Wallet)
+	refreshToken, err := jwt.CreateRefreshToken(User.Wallet)
 	if err != nil {
 		c.JSON(500, gin.H{
 			"status":       500,
@@ -54,7 +60,7 @@ func (p *Controller) SignIn(c *gin.Context) {
 		return
 	}
 
-	accessToken, err := jwt.CreateAccessToken(req.Wallet, req.IsManager)
+	accessToken, err := jwt.CreateAccessToken(User.Wallet, User.IsManager)
 	if err != nil {
 		c.JSON(500, gin.H{
 			"status":       500,
