@@ -2,11 +2,28 @@ package controller
 
 import (
 	"WBA-BC-Project-05/library/jwt"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"wba-bc-project-05/backend/model"
 
 	"github.com/gin-gonic/gin"
 )
+
+func (p *Controller) RespError(c *gin.Context, body interface{}, status int, err ...interface{}) {
+	bytes, _ := json.Marshal(body)
+
+	fmt.Println("Request error", "path", c.FullPath(), "body", bytes, "status", status, "error", err)
+
+	c.JSON(status, gin.H{
+		"Error": "Request Error",
+		"path": c.FullPath(),
+		"body": bytes,
+		"status": status,
+		"error": err,
+	})
+	c.Abort()
+}
 
 // Signin - 로그인 메서드
 func (p *Controller) SignIn(c *gin.Context) {
