@@ -1,6 +1,7 @@
 package Config
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/naoina/toml"
@@ -32,6 +33,7 @@ func NewConfig(fpath string) *Config {
 		if err := toml.NewDecoder(file).Decode(c); err != nil {
 			panic(err)
 		} else {
+			fmt.Println(c)
 			return c
 		}
 	}

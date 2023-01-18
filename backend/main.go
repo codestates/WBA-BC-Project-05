@@ -1,12 +1,12 @@
-package backend
+package main
 
 import (
 	"fmt"
 	"net/http"
 	"time"
-	conf "wba-bc-project-05/backend/config"
 	"wba-bc-project-05/backend/controller"
 	"wba-bc-project-05/backend/router"
+	conf "wba-bc-project-05/config"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -17,7 +17,7 @@ var (
 
 func main() {
 	// config 초기화
-	cf := conf.NewConfig("./config/config.toml")
+	cf := conf.NewConfig("../config/config.toml")
 
 	if ctl, err := controller.NewCTL(cf); err != nil {
 		// 컨트롤러 초기화
@@ -39,6 +39,8 @@ func main() {
 			return mapi.ListenAndServe()
 		})
 	}
+	fmt.Println("wait!", time.Now().Unix())
+
 	// 종료 대기
 	if err := g.Wait(); err != nil {
 		panic(err)
