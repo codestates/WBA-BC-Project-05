@@ -24,7 +24,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	privateKey, err := crypto.HexToECDSA("709d645e55cc559b533b824053dd97a85efe924039b342695a2a8843048cf93d")
+	privateKey, err := crypto.HexToECDSA("53994feaabfb3dcc3c34c087d45d60799ccdfdf5c02b05285022d0aa763984bc")
 	if err != nil {
 		log.Fatal(err)
 	}

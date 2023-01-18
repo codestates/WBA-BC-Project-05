@@ -1,7 +1,7 @@
 all:
 	rm -rf *.go ./build
-	solc --abi --bin TotoroVerify.sol -o build
-	abigen --bin=build/TotoroVerify.bin --abi=build/TotoroVerify.abi --pkg=contracts --out=TotoroVerify.go
+	solc --abi --bin TotoroVote.sol -o build
+	abigen --bin=build/TotoroVote.bin --abi=build/TotoroVote.abi --pkg=contracts --out=TotoroVote.go
 	go run ./deploy/deploy.go ../config/config.toml
 
 clean:

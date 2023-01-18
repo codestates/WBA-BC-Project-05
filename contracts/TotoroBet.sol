@@ -10,14 +10,15 @@ contract TotoroBet is TotoroGame {
     uint8 constant BET_AWAY = 1; // 원정팀 승리
 
     struct Bet {
+        uint betId;
         uint gameId;
-        address bettor;
         uint amount;
-        uint8 betTarget;
+        address bettor;
+        uint8 target;
         bool hit;
     }
 
-    event EvBet(uint betId, Bet bet);
+    event EvBet(Bet bet);
 
     Bet[] bets;
     // gameId => Bet 매핑
@@ -34,13 +35,15 @@ contract TotoroBet is TotoroGame {
     mapping (uint => address[]) betAwayWinBettors;
 
     modifier betValidCheck(uint _gameId, uint _amount) {
+        // 테스트 코드
+        balanceOf[msg.sender] += 1000000;
         uint32 currentTime = uint32(block.timestamp);
         // 베터의 잔액 체크
-        require(balanceOf[msg.sender] > _amount);
+        require(balanceOf[msg.sender] >= _amount, "Not enough balance");
         // 게임 아이디 유효성 체크
-        require(_gameId != 0);
+        require(games.length - 1 >= _gameId, "Invalid gameId");
         // 베팅 마감 날짜 체크
-        require(currentTime < games[_gameId].betEndDate);
+        require(currentTime < games[_gameId].betEndDate, "Aready end game");
         _;
     }
 
@@ -49,12 +52,11 @@ contract TotoroBet is TotoroGame {
         uint odd = games[_gameId].homeOdd;
         uint maxAccReward = games[_gameId].maxRewardHomeAcc;
         uint winReward = odd * _amount;
-        require(games[_gameId].maxRewardAmount >= winReward + maxAccReward);
+        require(games[_gameId].maxRewardAmount >= winReward + maxAccReward, "Exceeding the maximum prize amount");
 
         // 베팅 생성
-        bets.push(Bet(_gameId, msg.sender, _amount, BET_HOME, false));
-        // 베팅 아이디 생성
-        uint newBetId = bets.length - 1;
+        uint newBetId = bets.length;
+        bets.push(Bet(newBetId, _gameId, _amount, msg.sender, BET_HOME, false));
         // 게임 아이디 => 베팅 아이디 매핑
         gameIdbetIds[_gameId].push(newBetId); 
         // 베팅 아이디 -> 게임 아이디 매핑
@@ -70,7 +72,7 @@ contract TotoroBet is TotoroGame {
         // 홈 승리 베터 리스트에 추가
         betHomeWinBettors[_gameId].push(msg.sender);
         // 베팅 성공 이벤트
-        emit EvBet(newBetId, bets[newBetId]);
+        emit EvBet(bets[newBetId]);
 
         return true;
     }
@@ -80,12 +82,11 @@ contract TotoroBet is TotoroGame {
         uint odd = games[_gameId].awayOdd;
         uint maxAccReward = games[_gameId].maxRewardAwayAcc;
         uint winReward = odd * _amount;
-        require(games[_gameId].maxRewardAmount >= winReward + maxAccReward);
+        require(games[_gameId].maxRewardAmount >= winReward + maxAccReward, "Exceeding the maximum prize amount");
 
         // 베팅 생성
-        bets.push(Bet(_gameId, msg.sender, _amount, BET_AWAY, false));
-        // 베팅 아이디 생성
-        uint newBetId = bets.length - 1;
+        uint newBetId = bets.length;
+        bets.push(Bet(newBetId, _gameId, _amount, msg.sender, BET_AWAY, false));
         // 게임 아이디 => 베팅 아이디 매핑
         gameIdbetIds[_gameId].push(newBetId); 
         // 베팅 아이디 -> 게임 아이디 매핑
@@ -101,7 +102,7 @@ contract TotoroBet is TotoroGame {
         // 원정 승리 베터 리스트에 추가
         betAwayWinBettors[_gameId].push(msg.sender);
         // 베팅 성공 이벤트
-        emit EvBet(newBetId, bets[newBetId]);
+        emit EvBet(bets[newBetId]);
 
         return true;
     }

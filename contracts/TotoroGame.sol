@@ -6,6 +6,7 @@ import "./TotoroToken.sol";
 
 contract TotoroGame is TotoroToken {
     struct Game {
+        uint gameId;
         address creator;
         string title;
         string description;
@@ -13,9 +14,9 @@ contract TotoroGame is TotoroToken {
         string away;
         uint homeOdd;
         uint awayOdd;
-        uint verifyHomeCount;
-        uint verifyAwayCount;
-        uint verifyVoidCount;
+        uint voteHomeCount;
+        uint voteAwayCount;
+        uint voteVoidCount;
         uint maxRewardAmount;
         uint maxRewardHomeAcc;
         uint maxRewardAwayAcc;
@@ -23,10 +24,10 @@ contract TotoroGame is TotoroToken {
         uint awayAccReward;
         uint32 createDate;
         uint32 betEndDate;
-        uint32 verifyEndDate;
+        uint32 voteEndDate;
     }
 
-    event EvCreateGame(uint gameId, Game game);
+    event EvCreateGame(Game game);
 
     Game[] games;
     mapping (uint => uint) rewardLock;
@@ -34,7 +35,7 @@ contract TotoroGame is TotoroToken {
     mapping (address => uint[]) ownerGames;
 
     function createGame(string memory _title, string memory _description, string memory _home, string memory _away,
-        uint _homeOdd, uint _awayOdd, uint _maxRewardAmount, uint32 _betEndDate, uint32 _verifyEndDate) external returns (bool) {
+        uint _homeOdd, uint _awayOdd, uint _maxRewardAmount, uint32 _betEndDate, uint32 _voteEndDate) external returns (bool) {
 
         uint32 currentTime = uint32(block.timestamp);
 
@@ -42,22 +43,21 @@ contract TotoroGame is TotoroToken {
         balanceOf[msg.sender] = 1000000;
 
         // 최대 지급 가능 잔고 체크
-        require(_maxRewardAmount > 0 && balanceOf[msg.sender] >= _maxRewardAmount, "Not enough balance");
+        require(_maxRewardAmount >= 0 && balanceOf[msg.sender] >= _maxRewardAmount, "Not enough balance");
 
         // 베팅 마감 날짜 체크
         require(currentTime < _betEndDate, "Invalid BetEndDate");
 
-        // 검증 마감 날짜 체크
-        require(_betEndDate < _verifyEndDate, "Invalid VerifyEndDate");
+        // 투표 마감 날짜 체크
+        require(_betEndDate < _voteEndDate, "Invalid VoteEndDate");
 
         // 게임 생성자에게 수수료 부과?
         // balanceOf[msg.sender] -= 10;
 
         // 게임 생성
-        games.push(Game(msg.sender, _title, _description, _home, _away, _homeOdd, _awayOdd, 0, 0, 0,
-            _maxRewardAmount, 0, 0, 0, 0, uint32(block.timestamp), _betEndDate, _verifyEndDate));
-        // 게임 아이디 생성
-        uint newGameId = games.length - 1;
+        uint newGameId = games.length;
+        games.push(Game(newGameId, msg.sender, _title, _description, _home, _away, _homeOdd, _awayOdd, 0, 0, 0,
+            _maxRewardAmount, 0, 0, 0, 0, uint32(block.timestamp), _betEndDate, _voteEndDate));
         // 게임 아이디 => 게임 생성자 주소 매핑
         gameOwner[newGameId] = msg.sender;
         // 게임 생성자 주소 => 게임 아이디 매핑
@@ -68,7 +68,7 @@ contract TotoroGame is TotoroToken {
         rewardLock[newGameId] = _maxRewardAmount;
 
         // 게임 생성 성공 이벤트
-        emit EvCreateGame(newGameId, games[newGameId]);
+        emit EvCreateGame(games[newGameId]);
 
         return true;
     }

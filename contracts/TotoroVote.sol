@@ -4,78 +4,78 @@ pragma solidity ^0.8.17;
 
 import "./TotoroBet.sol";
 
-contract TotoroVerify is TotoroBet {
-    // 검증 투표 상수
-    uint8 constant VERIFY_VOTE_HOME = 0; // 홈팀 승리
-    uint8 constant VERIFY_VOTE_AWAY = 1; // 원정팀 승리
-    uint8 constant VERIFY_VOTE_VOID = 2; // 무효
+contract TotoroVote is TotoroBet {
+    // 투표 상수
+    uint8 constant VOTE_TARGET_HOME = 0; // 홈팀 승리
+    uint8 constant VOTE_TARGET_AWAY = 1; // 원정팀 승리
+    uint8 constant VOTE_TARGET_VOID = 2; // 무효
 
-    struct Verify {
+    struct Vote {
+        uint voteId;
         uint gameId;
-        address verifier;
-        uint8 vote;
+        address voter;
+        uint8 target;
     }
 
-    event EvVerify(uint verifyId, Verify verify);
+    event EvVote(Vote vote);
     event EvCalculate(uint gameId);
 
-    Verify[] verifys;
-    // gameId => verifyId 매핑
-    mapping (uint => uint[]) gameIdVerifyIds;
-    // verifyId => 계정 주소 매핑
-    mapping (uint => address) verifyOwner;
-    // 계정 주소 => verifyId[] 매핑
-    mapping (address => uint[]) ownerVerifys;
+    Vote[] votes;
+    // gameId => voteId 매핑
+    mapping (uint => uint[]) gameIdVoteIds;
+    // voteId => 계정 주소 매핑
+    mapping (uint => address) voteOwner;
+    // 계정 주소 => voteId[] 매핑
+    mapping (address => uint[]) ownerVotes;
 
-    modifier verifyValidCheck(uint _gameId, uint8 _vote) {
+    modifier voteValidCheck(uint _gameId, uint8 _vote) {
         uint32 currentTime = uint32(block.timestamp);
         // 게임 아이디 유효성 체크
-        require(_gameId != 0);
+        require(games.length - 1 >= _gameId);
         // 베팅 마감 날짜 체크
         require(currentTime > games[_gameId].betEndDate);
-        // 자신이 베팅한 게임은 검증할 수 없음
+        // 자신이 베팅한 게임은 투표할 수 없음
         uint[] memory gameBets = gameIdbetIds[_gameId];
         for (uint i=0; i<gameBets.length; i++) {
             uint betId = gameBets[i];
             require(betOwner[betId] != msg.sender);
         }
-        // 검증 마감 날짜가 지난 경우 : 정산 처리
-        if (currentTime > games[_gameId].verifyEndDate) {
+        // 투표 마감 날짜가 지난 경우 : 정산 처리
+        if (currentTime > games[_gameId].voteEndDate) {
             calculate(_gameId);
             return;
         }
         _;
     }
 
-    function voteHome(uint _gameId) external verifyValidCheck(_gameId, VERIFY_VOTE_HOME) {
-        games[_gameId].verifyHomeCount++;
-        verify(_gameId, VERIFY_VOTE_HOME);
+    function voteHome(uint _gameId) external voteValidCheck(_gameId, VOTE_TARGET_HOME) {
+        games[_gameId].voteHomeCount++;
+        vote(_gameId, VOTE_TARGET_HOME);
     }
 
-    function voteAway(uint _gameId) external verifyValidCheck(_gameId, VERIFY_VOTE_AWAY) {
-        games[_gameId].verifyAwayCount++;
-        verify(_gameId, VERIFY_VOTE_AWAY);
+    function voteAway(uint _gameId) external voteValidCheck(_gameId, VOTE_TARGET_AWAY) {
+        games[_gameId].voteAwayCount++;
+        vote(_gameId, VOTE_TARGET_AWAY);
     }
 
-    function voteVoid(uint _gameId) external verifyValidCheck(_gameId, VERIFY_VOTE_VOID) {
-        games[_gameId].verifyVoidCount++;
-        verify(_gameId, VERIFY_VOTE_VOID);
+    function voteVoid(uint _gameId) external voteValidCheck(_gameId, VOTE_TARGET_VOID) {
+        games[_gameId].voteVoidCount++;
+        vote(_gameId, VOTE_TARGET_VOID);
     }
 
-    function verify(uint _gameId, uint8 _vote) internal returns (bool) {
-        // 검증 생성
-        verifys.push(Verify(_gameId, msg.sender, _vote));
-        // 검증 아이디 생성
-        uint newVerifyId = verifys.length - 1;
-        // 게임 아이디 => 검증 아이디 매핑
-        gameIdVerifyIds[_gameId].push(newVerifyId); 
-        // 검증 아이디 => 검증자 매핑
-        verifyOwner[newVerifyId] = msg.sender;
-        // 검증자 => 검증 아이디 추가
-        ownerVerifys[msg.sender].push(newVerifyId);
-        // 검증 성공 이벤트
-        emit EvVerify(newVerifyId, verifys[newVerifyId]);
-        // 검증자에게 보상 지급
+    function vote(uint _gameId, uint8 _target) internal returns (bool) {
+        // 투표 생성
+        uint newVoteId = votes.length;
+        votes.push(Vote(newVoteId, _gameId, msg.sender, _target));
+        // 게임 아이디 => 투표 아이디 매핑
+        gameIdVoteIds[_gameId].push(newVoteId); 
+        // 투표 아이디 => 투표자 매핑
+        voteOwner[newVoteId] = msg.sender;
+        // 투표자 => 투표 아이디 추가
+        ownerVotes[msg.sender].push(newVoteId);
+        // 투표 성공 이벤트
+        emit EvVote(votes[newVoteId]);
+        // 투표자에게 보상 지급
         balanceOf[msg.sender] += 10000;
 
         return true;
@@ -101,7 +101,7 @@ contract TotoroVerify is TotoroBet {
         // 홈 승리에 베팅한 베터에게 보상 지급
         for (uint8 i=0; i<gameIdbetIds[_gameId].length; i++) {
             Bet memory bet = bets[gameIdbetIds[_gameId][i]];
-            if (bet.betTarget == VERIFY_VOTE_HOME) {
+            if (bet.target == VOTE_TARGET_HOME) {
                 uint reward = bet.amount * odds;
                 // 베팅 적중에 따른 보상
                 balanceOf[bet.bettor] += reward;
@@ -121,7 +121,7 @@ contract TotoroVerify is TotoroBet {
         // 득표에 따른 보상 처리
         for (uint8 i=0; i<gameIdbetIds[_gameId].length; i++) {
             Bet memory bet = bets[gameIdbetIds[_gameId][i]];
-            if (bet.betTarget == VERIFY_VOTE_AWAY) {
+            if (bet.target == VOTE_TARGET_AWAY) {
                 // 베팅 적중에 따른 보상
                 uint reward = bet.amount * odds;
                 balanceOf[bet.bettor] += reward;
@@ -150,19 +150,19 @@ contract TotoroVerify is TotoroBet {
     // 정산 처리 함수
     function calculate(uint _gameId) internal {
         Game memory game = games[_gameId];
-        // 가장 많은 검증 득표를 받은 항목 찾기
-        uint[] memory votes = new uint[](3);
-        votes[0] = game.verifyHomeCount;
-        votes[1] = game.verifyAwayCount;
-        votes[2] = game.verifyVoidCount;
-        uint winVoteIdx = findMaxIdx(votes);
+        // 가장 많은 득표를 받은 항목 찾기
+        uint[] memory voteCounts = new uint[](3);
+        voteCounts[0] = game.voteHomeCount;
+        voteCounts[1] = game.voteAwayCount;
+        voteCounts[2] = game.voteVoidCount;
+        uint winVoteIdx = findMaxIdx(voteCounts);
 
         // 홈팀 승리 처리
-        if (winVoteIdx == VERIFY_VOTE_HOME) {
+        if (winVoteIdx == VOTE_TARGET_HOME) {
             winHome(_gameId);
         }
         // 원정팀 승리 처리
-        else if(winVoteIdx == VERIFY_VOTE_AWAY) {
+        else if(winVoteIdx == VOTE_TARGET_AWAY) {
             winAway(_gameId);
         }
         // 게임 무효 처리
