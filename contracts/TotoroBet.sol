@@ -35,8 +35,6 @@ contract TotoroBet is TotoroGame {
     mapping (uint => address[]) betAwayWinBettors;
 
     modifier betValidCheck(uint _gameId, uint _amount) {
-        // 테스트 코드
-        balanceOf[msg.sender] += 1000000;
         uint32 currentTime = uint32(block.timestamp);
         // 베터의 잔액 체크
         require(balanceOf[msg.sender] >= _amount, "Not enough balance");
@@ -66,7 +64,7 @@ contract TotoroBet is TotoroGame {
         // 베팅자 => 베팅 아이디 추가
         ownerBets[msg.sender].push(newBetId);
         // 베터의 잔액 차감
-        balanceOf[msg.sender] -= _amount;
+        _transferFrom(msg.sender, owner, _amount);
         // 게임의 누적 베팅 금액 증가
         games[_gameId].maxRewardHomeAcc += winReward;
         // 홈 승리 베터 리스트에 추가
@@ -96,7 +94,7 @@ contract TotoroBet is TotoroGame {
         // 베팅자 => 베팅 아이디 추가
         ownerBets[msg.sender].push(newBetId);
         // 베터의 잔액 차감
-        balanceOf[msg.sender] -= _amount;
+        _transferFrom(msg.sender, owner, _amount);
         // 게임의 누적 베팅 금액 증가
         games[_gameId].maxRewardAwayAcc += winReward;
         // 원정 승리 베터 리스트에 추가
