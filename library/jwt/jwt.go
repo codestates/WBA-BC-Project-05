@@ -16,6 +16,8 @@ type jwtMethod interface {
 	CreateReissuanceToken()
 }
 
+const secretKey = "test"
+
 // CreateRefreshToken - Middleware that create RefreshToken
 func CreateRefreshToken(Name string) (string, error) {
 	refreshToken := jwt.New(jwt.SigningMethodHS256)
@@ -31,7 +33,7 @@ func CreateRefreshToken(Name string) (string, error) {
 }
 
 // CreateAccessToken - Middleware that create AccessToken
-func CreateAccessToken(Name string, IsManager bool) (string, error) {
+func CreateAccessToken(Name string, IsManager string) (string, error) {
 	accessToken := jwt.New(jwt.SigningMethodHS256)
 	claims := accessToken.Claims.(jwt.MapClaims)
 	claims["Name"] = Name
@@ -161,7 +163,7 @@ func CreateReissuanceToken(c *gin.Context) {
 	}
 
 	Name := claims["Name"].(string)
-	IsManager := claims["IsManager"].(bool)
+	IsManager := claims["IsManager"].(string)
 	accessToken, err := CreateAccessToken(Name, IsManager)
 
 	if err != nil {
