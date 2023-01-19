@@ -61,7 +61,7 @@ func main() {
 			e.BlockNumber = vLog.BlockNumber
 			e.TxHash = vLog.TxHash.Hex()
 			e.Signature = vLog.Topics[0].Hex()
-			md.EventModel.Save(e)
+			md.EventModel.InsertEventLog(e)
 
 			// 이벤트에 따른 처리
 			switch vLog.Topics[0].String() {
@@ -71,6 +71,8 @@ func main() {
 				saveBetEvent(md, contractAbi, "EvBet", vLog.Data)
 			case contractAbi.Events["EvVote"].ID.String():
 				saveVoteEvent(md, contractAbi, "EvVote", vLog.Data)
+			case contractAbi.Events["Transfer"].ID.String():
+				saveTransferEvent(md, contractAbi, "Transfer", vLog.Topics, vLog.Data)
 			default:
 				fmt.Println("Unknown event")
 			}
@@ -87,7 +89,6 @@ func saveGameEvent(md *model.Model, abi abi.ABI, name string, data []byte) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// DB에 저장
 	gameForDB, err := md.GameModel.ConvertToDB(game.Game)
 	if err != nil {
 		log.Fatal(err)
@@ -104,7 +105,6 @@ func saveBetEvent(md *model.Model, abi abi.ABI, name string, data []byte) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// DB에 저장
 	betForDB, err := md.BetModel.ConvertToDB(bet.Bet)
 	if err != nil {
 		log.Fatal(err)
@@ -121,12 +121,27 @@ func saveVoteEvent(md *model.Model, abi abi.ABI, name string, data []byte) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// DB에 저장
 	voteForDB, err := md.VoteModel.ConvertToDB(vote.Vote)
 	if err != nil {
 		log.Fatal(err)
 	}
 	err = md.VoteModel.Insert(voteForDB)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func saveTransferEvent(md *model.Model, abi abi.ABI, name string, topics []common.Hash, data []byte) {
+	te := model.TransferEvent{}
+	err := abi.UnpackIntoInterface(&te, name, data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tedb := model.TransferEventForDB{}
+	tedb.From = "0x" + topics[1].String()[26:]
+	tedb.To = "0x" + topics[2].String()[26:]
+	tedb.Value = te.Value.String()
+	err = md.EventModel.InsertTransferEvent(tedb)
 	if err != nil {
 		log.Fatal(err)
 	}

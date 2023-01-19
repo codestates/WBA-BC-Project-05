@@ -30,7 +30,7 @@ func NewModel(mgUrl string) (*Model, error) {
 		r.BetModel = NewBetModel(db.Collection("bet"))
 		r.VoteModel = NewVoteModel(db.Collection("vote"))
 		r.UserModel = NewUserModel(db.Collection("user"))
-		r.EventModel = NewEventModel(db.Collection("event"))
+		r.EventModel = NewEventModel(db.Collection("event"), db.Collection("transfer"))
 	}
 
 	return r, nil

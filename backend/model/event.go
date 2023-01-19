@@ -2,8 +2,9 @@ package model
 
 import (
 	"context"
-	"fmt"
+	"math/big"
 
+	"github.com/ethereum/go-ethereum/common"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -15,22 +16,42 @@ type EventLog struct {
 	Signature   string `bson:"signature"`
 }
 
-type eventModel struct {
-	col *mongo.Collection
+type TransferEvent struct {
+	From  common.Address `json:"from" bson:"from" uri:"from" binding:"required"`
+	To    common.Address `json:"to" bson:"to" uri:"to"`
+	Value *big.Int       `json:"value" bson:"value" uri:"value"`
 }
 
-func NewEventModel(col *mongo.Collection) *eventModel {
+type TransferEventForDB struct {
+	From  string `json:"from" bson:"from" uri:"from" binding:"required"`
+	To    string `json:"to" bson:"to" uri:"to"`
+	Value string `json:"value" bson:"value" uri:"value"`
+}
+
+type eventModel struct {
+	eventCol    *mongo.Collection
+	transferCol *mongo.Collection
+}
+
+func NewEventModel(eventCol, transferCol *mongo.Collection) *eventModel {
 	m := new(eventModel)
-	m.col = col
+	m.eventCol = eventCol
+	m.transferCol = transferCol
 	return m
 }
 
-func (p *eventModel) Save(event EventLog) error {
-	result, err := p.col.InsertOne(context.TODO(), event)
+func (p *eventModel) InsertEventLog(event EventLog) error {
+	_, err := p.eventCol.InsertOne(context.TODO(), event)
 	if err != nil {
 		return err
 	}
-	fmt.Println(result.InsertedID)
+	return nil
+}
 
+func (p *eventModel) InsertTransferEvent(te TransferEventForDB) error {
+	_, err := p.transferCol.InsertOne(context.TODO(), te)
+	if err != nil {
+		return err
+	}
 	return nil
 }
