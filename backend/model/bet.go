@@ -45,7 +45,7 @@ func (p *betModel) ConvertToDB(bet Bet) (BetForDB, error) {
 	betForDB.BetId = bet.BetId.String()
 	betForDB.GameId = bet.GameId.String()
 	betForDB.Amount = bet.Amount.String()
-	betForDB.Bettor = bet.BetId.String()
+	betForDB.Bettor = bet.Bettor.String()
 	betForDB.Target = bet.Target
 	return betForDB, nil
 }
