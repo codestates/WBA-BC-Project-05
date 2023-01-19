@@ -56,8 +56,9 @@ func (p *Router) Idx() *gin.Engine {
 		}
 		vote := v1.Group("/vote")
 		{
-			vote.POST("/away", p.ct.BetAway)
-			vote.POST("/home", p.ct.BetHome)
+			vote.POST("/away", p.ct.VoteAway)
+			vote.POST("/home", p.ct.VoteHome)
+			vote.POST("/void", p.ct.VoteVoid)
 		}
 		login := v1.Group("/login")
 		{

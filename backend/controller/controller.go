@@ -12,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-const test_pk = "b4aa07e8d878757f1ac53ca9bc03ea1763b043f78adb8da3018b9f1eeb13673f"
+var test_pk string
 
 type ResultJSON struct {
 	Message string      `json:"message"`
@@ -44,8 +44,9 @@ func NewCTL(cf *conf.Config, md *model.Model) (*Controller, error) {
 	}
 	r.md = md
 	// 개인키 및 컨트랙트 소유자 주소 저장
-	r.pk = cf.Blockchain.PrivateKey
+	r.pk = cf.Blockchain.OwnerPK
 	r.ownerAddress = cf.Blockchain.OwnerAddr
+	test_pk = cf.Blockchain.TestPK
 
 	return r, nil
 }
