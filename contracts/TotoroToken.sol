@@ -24,10 +24,20 @@ contract TotoroToken is IERC20 {
     string public name = "TOTORO Token";
     string public symbol = "TTR";
     uint8 public decimals = 18;
+    address owner;
+    mapping(address => bool) welcomeUser;
 
     constructor() {
+        owner = msg.sender;
         totalSupply += 1000000000e18;
-        balanceOf[msg.sender] += 1000000000e18;
+        balanceOf[owner] += 1000000000e18;
+    }
+
+    function welcomeToken() external returns (bool) {
+        require(welcomeUser[msg.sender] == false, "Aready Welcomed");
+        _transferFromOwner(msg.sender, 100e18);
+        welcomeUser[msg.sender] = true;
+        return true;
     }
 
     function getSymbol() external view returns (string memory) {
@@ -35,6 +45,10 @@ contract TotoroToken is IERC20 {
     }
 
     function transfer(address recipient, uint amount) external returns (bool) {
+        return _transfer(recipient, amount);
+    }
+
+    function _transfer(address recipient, uint amount) internal returns (bool) {
         balanceOf[msg.sender] -= amount;
         balanceOf[recipient] += amount;
         emit Transfer(msg.sender, recipient, amount);
@@ -47,15 +61,29 @@ contract TotoroToken is IERC20 {
         return true;
     }
 
-    function transferFrom(
-        address sender,
-        address recipient,
-        uint amount
-    ) external returns (bool) {
+    function transferFrom(address sender, address recipient, uint amount) external returns (bool) {
+        return _transferFrom(sender, recipient, amount);
+    }
+
+    function _transferFrom(address sender, address recipient, uint amount) internal returns (bool) {
         allowance[sender][msg.sender] -= amount;
         balanceOf[sender] -= amount;
         balanceOf[recipient] += amount;
         emit Transfer(sender, recipient, amount);
+        return true;
+    }
+
+    function _transferFromOwner(address recipient, uint amount) internal returns (bool) {
+        balanceOf[owner] -= amount;
+        balanceOf[recipient] += amount;
+        emit Transfer(owner, recipient, amount);
+        return true;
+    }
+
+    function _transferToOwner(address sender, uint amount) internal returns (bool) {
+        balanceOf[sender] -= amount;
+        balanceOf[owner] += amount;
+        emit Transfer(sender, owner, amount);
         return true;
     }
 

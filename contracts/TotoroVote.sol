@@ -5,6 +5,8 @@ pragma solidity ^0.8.17;
 import "./TotoroBet.sol";
 
 contract TotoroVote is TotoroBet {
+    // 투표 참여 보상
+    uint constant voteReward = 1e9;
     // 투표 상수
     uint8 constant VOTE_TARGET_HOME = 0; // 홈팀 승리
     uint8 constant VOTE_TARGET_AWAY = 1; // 원정팀 승리
@@ -18,7 +20,7 @@ contract TotoroVote is TotoroBet {
     }
 
     event EvVote(Vote vote);
-    event EvCalculate(uint gameId);
+    event EvResult(uint gameId, uint8 win);
 
     Vote[] votes;
     // gameId => voteId 매핑
@@ -31,14 +33,13 @@ contract TotoroVote is TotoroBet {
     modifier voteValidCheck(uint _gameId, uint8 _vote) {
         uint32 currentTime = uint32(block.timestamp);
         // 게임 아이디 유효성 체크
-        require(games.length - 1 >= _gameId);
+        require(games.length - 1 >= _gameId, "Invalid gameId");
         // 베팅 마감 날짜 체크
-        require(currentTime > games[_gameId].betEndDate);
+        require(currentTime > games[_gameId].betEndDate, "Not a valid date to vote");
         // 자신이 베팅한 게임은 투표할 수 없음
-        uint[] memory gameBets = gameIdbetIds[_gameId];
-        for (uint i=0; i<gameBets.length; i++) {
-            uint betId = gameBets[i];
-            require(betOwner[betId] != msg.sender);
+        uint[] memory myBets = ownerBets[msg.sender];
+        for (uint i=0; i<myBets.length; i++) {
+            require(betIdGameId[myBets[i]] != _gameId, "Cannot vote for games you bet on");
         }
         // 투표 마감 날짜가 지난 경우 : 정산 처리
         if (currentTime > games[_gameId].voteEndDate) {
@@ -76,7 +77,7 @@ contract TotoroVote is TotoroBet {
         // 투표 성공 이벤트
         emit EvVote(votes[newVoteId]);
         // 투표자에게 보상 지급
-        balanceOf[msg.sender] += 10000;
+        _transferFromOwner(msg.sender, voteReward);
 
         return true;
     }
@@ -102,15 +103,14 @@ contract TotoroVote is TotoroBet {
         for (uint8 i=0; i<gameIdbetIds[_gameId].length; i++) {
             Bet memory bet = bets[gameIdbetIds[_gameId][i]];
             if (bet.target == VOTE_TARGET_HOME) {
-                uint reward = bet.amount * odds;
                 // 베팅 적중에 따른 보상
-                balanceOf[bet.bettor] += reward;
+                uint reward = bet.amount * odds / (10 ** oddDecimals);
+                _transferFromOwner(bet.bettor, reward);
                 accReward -= reward;
             }
         }
         // 남은 상금은 게임 생성자에게 전달
-        balanceOf[games[_gameId].creator] += accReward;
-        balanceOf[games[_gameId].creator] += games[_gameId].awayAccReward;
+        _transferFromOwner(games[_gameId].creator, games[_gameId].awayAccReward + accReward);
     }
 
     // 원정팀 승리 처리 함수
@@ -123,33 +123,33 @@ contract TotoroVote is TotoroBet {
             Bet memory bet = bets[gameIdbetIds[_gameId][i]];
             if (bet.target == VOTE_TARGET_AWAY) {
                 // 베팅 적중에 따른 보상
-                uint reward = bet.amount * odds;
-                balanceOf[bet.bettor] += reward;
+                uint reward = bet.amount* odds / (10 ** oddDecimals);
+                _transferFromOwner(bet.bettor, reward);
                 accReward -= reward;
             }
         }
         // 남은 상금은 게임 생성자에게 전달
-        balanceOf[games[_gameId].creator] += accReward;
-        balanceOf[games[_gameId].creator] += games[_gameId].awayAccReward;
+        _transferFromOwner(games[_gameId].creator, games[_gameId].homeAccReward + accReward);
     }
 
     // 무효 처리 함수
     function winVoid(uint _gameId) internal {
         // 게임 생성자의 동결된 자금 반환
-        uint reward = rewardLock[_gameId];
-        balanceOf[games[_gameId].creator] = reward;
+        _transferFromOwner(games[_gameId].creator, games[_gameId].maxRewardAmount);
 
         // 베팅 참여자에게 베팅 금액 반환
         uint[] memory gameBets = gameIdbetIds[_gameId];
         for (uint i=0; i<gameBets.length; i++) {
             Bet memory bet = bets[gameBets[i]];
-            balanceOf[bet.bettor] += bet.amount;
+            _transferFromOwner(bet.bettor, bet.amount);
         }
     }
 
     // 정산 처리 함수
     function calculate(uint _gameId) internal {
+        uint8 win = VOTE_TARGET_VOID;
         Game memory game = games[_gameId];
+
         // 가장 많은 득표를 받은 항목 찾기
         uint[] memory voteCounts = new uint[](3);
         voteCounts[0] = game.voteHomeCount;
@@ -157,20 +157,28 @@ contract TotoroVote is TotoroBet {
         voteCounts[2] = game.voteVoidCount;
         uint winVoteIdx = findMaxIdx(voteCounts);
 
+        // 투표가 동률인 경우 : 게임 무효 처리
+        if (game.voteHomeCount == game.voteAwayCount) {
+            winVoid(_gameId);
+            win = VOTE_TARGET_VOID;
+        }
         // 홈팀 승리 처리
-        if (winVoteIdx == VOTE_TARGET_HOME) {
+        else if (winVoteIdx == VOTE_TARGET_HOME) {
             winHome(_gameId);
+            win = VOTE_TARGET_HOME;
         }
         // 원정팀 승리 처리
         else if(winVoteIdx == VOTE_TARGET_AWAY) {
             winAway(_gameId);
+            win = VOTE_TARGET_AWAY;
         }
         // 게임 무효 처리
         else {
             winVoid(_gameId);
+            win = VOTE_TARGET_VOID;
         }
 
         // 정산 성공 이벤트
-        emit EvCalculate(_gameId);
+        emit EvResult(_gameId, win);
     }
 }

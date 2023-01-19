@@ -5,6 +5,10 @@ pragma solidity ^0.8.17;
 import "./TotoroToken.sol";
 
 contract TotoroGame is TotoroToken {
+    uint constant createFee = 1e9;
+    uint constant minMaxRewardAmount = 1e18;
+    uint8 constant oddDecimals = 2;
+
     struct Game {
         uint gameId;
         address creator;
@@ -30,7 +34,6 @@ contract TotoroGame is TotoroToken {
     event EvCreateGame(Game game);
 
     Game[] games;
-    mapping (uint => uint) rewardLock;
     mapping (uint => address) gameOwner;
     mapping (address => uint[]) ownerGames;
 
@@ -39,11 +42,11 @@ contract TotoroGame is TotoroToken {
 
         uint32 currentTime = uint32(block.timestamp);
 
-        // 테스트 코드
-        balanceOf[msg.sender] = 1000000;
+        // 최소한으로 설정해야 할 최대 지급 가능 잔고 체크
+        require(_maxRewardAmount >= minMaxRewardAmount, "Need minimun(1 ** deciamls token) maxRewardAmount");
 
-        // 최대 지급 가능 잔고 체크
-        require(_maxRewardAmount >= 0 && balanceOf[msg.sender] >= _maxRewardAmount, "Not enough balance");
+        // 잔고 체크
+        require(balanceOf[msg.sender] >= _maxRewardAmount + createFee, "Not enough balance");
 
         // 베팅 마감 날짜 체크
         require(currentTime < _betEndDate, "Invalid BetEndDate");
@@ -52,7 +55,7 @@ contract TotoroGame is TotoroToken {
         require(_betEndDate < _voteEndDate, "Invalid VoteEndDate");
 
         // 게임 생성자에게 수수료 부과?
-        // balanceOf[msg.sender] -= 10;
+        _transferToOwner(msg.sender, createFee);
 
         // 게임 생성
         uint newGameId = games.length;
@@ -63,9 +66,8 @@ contract TotoroGame is TotoroToken {
         // 게임 생성자 주소 => 게임 아이디 매핑
         ownerGames[msg.sender].push(newGameId);
 
-        // 게임 마감 시, 지급해야 할 최대 상금 lock
-        balanceOf[msg.sender] -= _maxRewardAmount;
-        rewardLock[newGameId] = _maxRewardAmount;
+        // 게임 마감 시, 지급해야 할 최대 상금 전달
+        _transferToOwner(msg.sender, _maxRewardAmount);
 
         // 게임 생성 성공 이벤트
         emit EvCreateGame(games[newGameId]);

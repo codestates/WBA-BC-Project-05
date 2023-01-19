@@ -16,7 +16,8 @@ type Config struct {
 		UrlWs        string
 		ContractAddr string
 		OwnerAddr    string
-		PrivateKey   string
+		OwnerPK      string
+		TestPK       string
 	}
 	DB struct {
 		Host string

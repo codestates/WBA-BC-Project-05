@@ -8,11 +8,13 @@ import (
 )
 
 type Model struct {
-	client    *mongo.Client
-	GameModel *gameModel
-	BetModel  *betModel
-	VoteModel *voteModel
-	colUser   *mongo.Collection
+	client      *mongo.Client
+	GameModel   *gameModel
+	BetModel    *betModel
+	VoteModel   *voteModel
+	ResultModel *resultModel
+	UserModel   *userModel
+	EventModel  *eventModel
 }
 
 func NewModel(mgUrl string) (*Model, error) {
@@ -28,7 +30,9 @@ func NewModel(mgUrl string) (*Model, error) {
 		r.GameModel = NewGameModel(db.Collection("game"))
 		r.BetModel = NewBetModel(db.Collection("bet"))
 		r.VoteModel = NewVoteModel(db.Collection("vote"))
-		r.colUser = db.Collection("user")
+		r.ResultModel = NewResultModel(db.Collection("result"))
+		r.UserModel = NewUserModel(db.Collection("user"))
+		r.EventModel = NewEventModel(db.Collection("event"), db.Collection("transfer"))
 	}
 
 	return r, nil

@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -45,7 +46,7 @@ func (p *betModel) ConvertToDB(bet Bet) (BetForDB, error) {
 	betForDB.BetId = bet.BetId.String()
 	betForDB.GameId = bet.GameId.String()
 	betForDB.Amount = bet.Amount.String()
-	betForDB.Bettor = bet.BetId.String()
+	betForDB.Bettor = bet.Bettor.String()
 	betForDB.Target = bet.Target
 	return betForDB, nil
 }
@@ -56,4 +57,17 @@ func (p *betModel) Insert(bet BetForDB) error {
 		return err
 	}
 	return nil
+}
+
+func (p *betModel) GetList(address string) ([]BetForDB, error) {
+	var results []BetForDB
+	filter := bson.M{"bettor": address}
+	cur, err := p.col.Find(context.TODO(), filter)
+	if err != nil {
+		return results, err
+	}
+	if err = cur.All(context.TODO(), &results); err != nil {
+		return results, err
+	}
+	return results, nil
 }
