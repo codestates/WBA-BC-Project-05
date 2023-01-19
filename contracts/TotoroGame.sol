@@ -7,6 +7,7 @@ import "./TotoroToken.sol";
 contract TotoroGame is TotoroToken {
     uint constant createFee = 1e9;
     uint constant minMaxRewardAmount = 1e18;
+    uint8 constant oddDecimals = 2;
 
     struct Game {
         uint gameId;

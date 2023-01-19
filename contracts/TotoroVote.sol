@@ -103,8 +103,8 @@ contract TotoroVote is TotoroBet {
         for (uint8 i=0; i<gameIdbetIds[_gameId].length; i++) {
             Bet memory bet = bets[gameIdbetIds[_gameId][i]];
             if (bet.target == VOTE_TARGET_HOME) {
-                uint reward = bet.amount * odds;
                 // 베팅 적중에 따른 보상
+                uint reward = bet.amount * odds / (10 ** oddDecimals);
                 _transferFromOwner(bet.bettor, reward);
                 accReward -= reward;
             }
@@ -123,7 +123,7 @@ contract TotoroVote is TotoroBet {
             Bet memory bet = bets[gameIdbetIds[_gameId][i]];
             if (bet.target == VOTE_TARGET_AWAY) {
                 // 베팅 적중에 따른 보상
-                uint reward = bet.amount * odds;
+                uint reward = bet.amount* odds / (10 ** oddDecimals);
                 _transferFromOwner(bet.bettor, reward);
                 accReward -= reward;
             }
