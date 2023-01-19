@@ -33,14 +33,13 @@ contract TotoroVote is TotoroBet {
     modifier voteValidCheck(uint _gameId, uint8 _vote) {
         uint32 currentTime = uint32(block.timestamp);
         // 게임 아이디 유효성 체크
-        require(games.length - 1 >= _gameId);
+        require(games.length - 1 >= _gameId, "Invalid gameId");
         // 베팅 마감 날짜 체크
-        require(currentTime > games[_gameId].betEndDate);
+        require(currentTime > games[_gameId].betEndDate, "Not a valid date to vote");
         // 자신이 베팅한 게임은 투표할 수 없음
-        uint[] memory gameBets = gameIdbetIds[_gameId];
-        for (uint i=0; i<gameBets.length; i++) {
-            uint betId = gameBets[i];
-            require(betOwner[betId] != msg.sender);
+        uint[] memory myBets = ownerBets[msg.sender];
+        for (uint i=0; i<myBets.length; i++) {
+            require(betIdGameId[myBets[i]] != _gameId, "Cannot vote for games you bet on");
         }
         // 투표 마감 날짜가 지난 경우 : 정산 처리
         if (currentTime > games[_gameId].voteEndDate) {
