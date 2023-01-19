@@ -51,6 +51,12 @@ func (p *Controller) BetAway(c *gin.Context) {
 
 // 베팅 리스트 반환 함수
 func (p *Controller) GetBets(c *gin.Context) {
-
+	address := c.Query("address")
+	ret, err := p.md.BetModel.GetList(address)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ResultJSON{Message: "error", Data: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, ResultJSON{Message: "success", Data: ret})
 	return
 }

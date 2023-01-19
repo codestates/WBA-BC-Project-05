@@ -25,7 +25,7 @@ contract TotoroToken is IERC20 {
     string public symbol = "TTR";
     uint8 public decimals = 18;
     address owner;
-    mapping(address => bool) welcomeUser; 
+    mapping(address => bool) welcomeUser;
 
     constructor() {
         owner = msg.sender;

@@ -133,3 +133,12 @@ func (p *gameModel) GetList(param string) ([]GameForDB, error) {
 	}
 	return results, nil
 }
+
+func (p *gameModel) Get(gameId string) (GameForDB, error) {
+	var result GameForDB
+	filter := bson.M{"gameId": gameId}
+	if err := p.col.FindOne(context.TODO(), filter).Decode(&result); err != nil {
+		return result, err
+	}
+	return result, nil
+}
