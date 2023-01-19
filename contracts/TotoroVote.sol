@@ -18,7 +18,7 @@ contract TotoroVote is TotoroBet {
     }
 
     event EvVote(Vote vote);
-    event EvCalculate(uint gameId);
+    event EvCalculate(uint gameId, uint8 result);
 
     Vote[] votes;
     // gameId => voteId 매핑
@@ -149,7 +149,9 @@ contract TotoroVote is TotoroBet {
 
     // 정산 처리 함수
     function calculate(uint _gameId) internal {
+        uint8 gameResult = VOTE_TARGET_VOID;
         Game memory game = games[_gameId];
+
         // 가장 많은 득표를 받은 항목 찾기
         uint[] memory voteCounts = new uint[](3);
         voteCounts[0] = game.voteHomeCount;
@@ -157,20 +159,28 @@ contract TotoroVote is TotoroBet {
         voteCounts[2] = game.voteVoidCount;
         uint winVoteIdx = findMaxIdx(voteCounts);
 
+        // 투표가 동률인 경우 : 게임 무효 처리
+        if (game.voteHomeCount == game.voteAwayCount) {
+            winVoid(_gameId);
+            gameResult = VOTE_TARGET_VOID;
+        }
         // 홈팀 승리 처리
-        if (winVoteIdx == VOTE_TARGET_HOME) {
+        else if (winVoteIdx == VOTE_TARGET_HOME) {
             winHome(_gameId);
+            gameResult = VOTE_TARGET_HOME;
         }
         // 원정팀 승리 처리
         else if(winVoteIdx == VOTE_TARGET_AWAY) {
             winAway(_gameId);
+            gameResult = VOTE_TARGET_AWAY;
         }
         // 게임 무효 처리
         else {
             winVoid(_gameId);
+            gameResult = VOTE_TARGET_VOID;
         }
 
         // 정산 성공 이벤트
-        emit EvCalculate(_gameId);
+        emit EvCalculate(_gameId, gameResult);
     }
 }
