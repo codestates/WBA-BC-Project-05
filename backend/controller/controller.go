@@ -21,6 +21,7 @@ type Controller struct {
 	md           *model.Model
 	pk           string
 	ownerAddress string
+	md *model.Model
 }
 
 func NewCTL(cf *conf.Config, md *model.Model) (*Controller, error) {
