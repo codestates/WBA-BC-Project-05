@@ -48,7 +48,13 @@ func (p *Controller) createGame(senderPkHexStr string, game model.Game) (string,
 
 // 게임 리스트 반환 함수
 func (p *Controller) GetGames(c *gin.Context) {
-
+	filter := c.Query("filter")
+	ret, err := p.md.GameModel.GetList(filter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ResultJSON{Message: "error", Data: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, ResultJSON{Message: "success", Data: ret})
 	return
 }
 
@@ -64,21 +70,13 @@ func (p *Controller) BetHome(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, ResultJSON{Message: "error", Data: err.Error()})
 		return
 	}
-	ret, err := p.betHome(txOp, bet)
+	tx, err := p.contract.BetHome(txOp, bet.GameId, bet.Amount)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ResultJSON{Message: "error", Data: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, ResultJSON{Message: "success", Data: ret})
+	c.JSON(http.StatusOK, ResultJSON{Message: "success", Data: tx.Hash().Hex()})
 	return
-}
-
-func (p *Controller) betHome(txOp *bind.TransactOpts, bet model.Bet) (string, error) {
-	tx, err := p.contract.BetHome(txOp, bet.GameId, bet.Amount)
-	if err != nil {
-		return "", err
-	}
-	return tx.Hash().Hex(), nil
 }
 
 // 원정팀 베팅 함수
@@ -93,21 +91,13 @@ func (p *Controller) BetAway(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, ResultJSON{Message: "bet prepare error", Data: err.Error()})
 		return
 	}
-	ret, err := p.betAway(txOp, bet)
+	tx, err := p.contract.BetAway(txOp, bet.GameId, bet.Amount)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ResultJSON{Message: "betAway error", Data: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, ResultJSON{Message: "success", Data: ret})
+	c.JSON(http.StatusOK, ResultJSON{Message: "success", Data: tx.Hash().Hex()})
 	return
-}
-
-func (p *Controller) betAway(txOp *bind.TransactOpts, bet model.Bet) (string, error) {
-	tx, err := p.contract.BetAway(txOp, bet.GameId, bet.Amount)
-	if err != nil {
-		return "", err
-	}
-	return tx.Hash().Hex(), nil
 }
 
 // 베팅 리스트 반환 함수
@@ -128,21 +118,13 @@ func (p *Controller) VoteHome(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, ResultJSON{Message: "error", Data: err.Error()})
 		return
 	}
-	ret, err := p.voteHome(txOp, vote)
+	tx, err := p.contract.VoteHome(txOp, vote.GameId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ResultJSON{Message: "error", Data: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, ResultJSON{Message: "success", Data: ret})
+	c.JSON(http.StatusOK, ResultJSON{Message: "success", Data: tx.Hash().Hex()})
 	return
-}
-
-func (p *Controller) voteHome(txOp *bind.TransactOpts, vote model.Vote) (string, error) {
-	tx, err := p.contract.VoteHome(txOp, vote.GameId)
-	if err != nil {
-		return "", err
-	}
-	return tx.Hash().Hex(), nil
 }
 
 // 트랜잭션 옵션 준비 함수

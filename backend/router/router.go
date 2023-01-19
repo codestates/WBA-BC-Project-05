@@ -42,6 +42,7 @@ func (p *Router) Idx() *gin.Engine {
 		game := v1.Group("/game")
 		{
 			game.POST("", p.ct.CreateGame)
+			game.GET("", p.ct.GetGames)
 		}
 		bet := v1.Group("/bet")
 		{
