@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 	"wba-bc-project-05/backend/controller"
+	"wba-bc-project-05/backend/model"
 	"wba-bc-project-05/backend/router"
 	conf "wba-bc-project-05/config"
 
@@ -19,7 +20,9 @@ func main() {
 	// config 초기화
 	cf := conf.NewConfig("../config/config.toml")
 
-	if ctl, err := controller.NewCTL(cf); err != nil {
+	if md, err := model.NewModel(cf.DB.Host); err != nil {
+		panic(fmt.Errorf("controller.NewCTL error: %v", err))
+	} else if ctl, err := controller.NewCTL(cf, md); err != nil {
 		// 컨트롤러 초기화
 		panic(fmt.Errorf("controller.NewCTL error: %v", err))
 	} else if rt, err := router.NewRouter(ctl); err != nil {

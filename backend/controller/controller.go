@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"wba-bc-project-05/backend/model"
 	conf "wba-bc-project-05/config"
 	"wba-bc-project-05/contracts"
 
@@ -17,11 +18,12 @@ type Controller struct {
 	client       *ethclient.Client
 	tokenAddress common.Address
 	contract     *contracts.Contracts
+	md           *model.Model
 	pk           string
 	ownerAddress string
 }
 
-func NewCTL(cf *conf.Config) (*Controller, error) {
+func NewCTL(cf *conf.Config, md *model.Model) (*Controller, error) {
 	var err error
 	r := new(Controller)
 	// 블록체인 네트워크와 연결할 클라이언트를 생성하기 위한 rpc url 연결
@@ -35,6 +37,7 @@ func NewCTL(cf *conf.Config) (*Controller, error) {
 	if err != nil {
 		return r, err
 	}
+	r.md = md
 	// 개인키 및 컨트랙트 소유자 주소 저장
 	r.pk = cf.Blockchain.PrivateKey
 	r.ownerAddress = cf.Blockchain.OwnerAddr

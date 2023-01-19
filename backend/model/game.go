@@ -3,8 +3,11 @@ package model
 import (
 	"context"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -101,4 +104,32 @@ func (p *gameModel) Insert(game GameForDB) error {
 		return err
 	}
 	return nil
+}
+
+func (p *gameModel) GetList(param string) ([]GameForDB, error) {
+	var results []GameForDB
+	var filter primitive.M
+	now := time.Now().Unix()
+	if param == "bet" {
+		filter = bson.M{"$and": bson.A{
+			bson.D{{"betEndDate", bson.D{{"$gt", now}}}},
+		},
+		}
+	} else if param == "vote" {
+		filter = bson.M{"$and": bson.A{
+			bson.D{{"betEndDate", bson.D{{"$gt", now}}}},
+			bson.D{{"voteEndDate", bson.D{{"$lt", now}}}},
+		},
+		}
+	} else if param == "end" {
+		filter = bson.M{"voteEndDate": bson.M{"$lt": now}}
+	}
+	cur, err := p.col.Find(context.TODO(), filter)
+	if err != nil {
+		return results, err
+	}
+	if err = cur.All(context.TODO(), &results); err != nil {
+		return results, err
+	}
+	return results, nil
 }
