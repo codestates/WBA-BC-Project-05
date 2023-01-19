@@ -71,6 +71,8 @@ func main() {
 				saveBetEvent(md, contractAbi, "EvBet", vLog.Data)
 			case contractAbi.Events["EvVote"].ID.String():
 				saveVoteEvent(md, contractAbi, "EvVote", vLog.Data)
+			case contractAbi.Events["EvCalculate"].ID.String():
+				saveResultEvent(md, contractAbi, "EvResult", vLog.Data)
 			case contractAbi.Events["Transfer"].ID.String():
 				saveTransferEvent(md, contractAbi, "Transfer", vLog.Topics, vLog.Data)
 			default:
@@ -126,6 +128,22 @@ func saveVoteEvent(md *model.Model, abi abi.ABI, name string, data []byte) {
 		log.Fatal(err)
 	}
 	err = md.VoteModel.Insert(voteForDB)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func saveResultEvent(md *model.Model, abi abi.ABI, name string, data []byte) {
+	result := model.Result{}
+	err := abi.UnpackIntoInterface(&result, name, data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	resultForDB, err := md.ResultModel.ConvertForDB(result)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = md.ResultModel.Insert(resultForDB)
 	if err != nil {
 		log.Fatal(err)
 	}
