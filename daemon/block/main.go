@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	conf "wba-bc-project-05/daemon/block/config"
+	conf "wba-bc-project-05/config"
 	"wba-bc-project-05/daemon/block/model"
 
 	"github.com/ethereum/go-ethereum/core/types"
@@ -13,7 +13,7 @@ import (
 
 func main() {
 	// config 초기화
-	cf := conf.GetConfig("./config/config.toml")
+	cf := conf.NewConfig("../../config/config.toml")
 
 	// model 초기화
 	md, err := model.NewModel(cf.DB.Host)
@@ -22,7 +22,7 @@ func main() {
 	}
 
 	// ethclint 초기화
-	client, err := ethclient.Dial(cf.Network.URL)
+	client, err := ethclient.Dial(cf.Blockchain.UrlWs)
 	if err != nil {
 		log.Fatal(err)
 	}

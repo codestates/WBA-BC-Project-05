@@ -39,17 +39,20 @@ func (p *Router) Idx() *gin.Engine {
 
 	v1 := e.Group("/v1")
 	{
-		coin := v1.Group("/coin")
+		game := v1.Group("/game")
 		{
-			coin.POST("/transfer", p.ct.TransferCoin)
-			coin.POST("/transfer/from", p.ct.TransferCoinFrom)
+			game.POST("", p.ct.CreateGame)
+			game.GET("", p.ct.GetGames)
 		}
-		token := v1.Group("/token")
+		bet := v1.Group("/bet")
 		{
-			token.GET("/symbol", p.ct.GetTokenSymbol)
-			token.GET("/balance/:address", p.ct.GetTokenBalance)
-			token.POST("/transfer", p.ct.TransferToken)
-			token.POST("/transfer/from", p.ct.TransferTokenFrom)
+			bet.POST("/away", p.ct.BetAway)
+			bet.POST("/home", p.ct.BetHome)
+		}
+		vote := v1.Group("/vote")
+		{
+			vote.POST("/away", p.ct.BetAway)
+			vote.POST("/home", p.ct.BetHome)
 		}
 		login := v1.Group("/login")
 		{

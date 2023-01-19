@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.17;
 
 interface IERC20 {
@@ -16,17 +17,21 @@ interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint value);
 }
 
-contract CARToken is IERC20 {
+contract TotoroToken is IERC20 {
     uint public totalSupply;
     mapping(address => uint) public balanceOf;
     mapping(address => mapping(address => uint)) public allowance;
-    string public name = "CAR Token";
-    string public symbol = "CAR";
+    string public name = "TOTORO Token";
+    string public symbol = "TTR";
     uint8 public decimals = 18;
 
     constructor() {
         totalSupply += 1000000000e18;
         balanceOf[msg.sender] += 1000000000e18;
+    }
+
+    function getSymbol() external view returns (string memory) {
+        return symbol;
     }
 
     function transfer(address recipient, uint amount) external returns (bool) {
