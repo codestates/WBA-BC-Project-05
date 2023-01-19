@@ -37,7 +37,7 @@ func (p *Controller) SignIn(c *gin.Context) {
 
 	User := model.User{}
 	// req := SigninParam{ID: id, Pw: pw}
-	if err := p.md.SigninModel(id, pw); err != nil {
+	if err := p.md.UserModel.SigninModel(id, pw); err != nil {
 		p.RespError(c, nil, http.StatusUnprocessableEntity, "parameter not found", err)
 		return
 	}
@@ -89,7 +89,7 @@ func (p *Controller) SignUp(c *gin.Context) {
 	isManager := c.PostForm("is_manager")
 
 	req := model.User{UserID: id, Pw: pw, Wallet: wallet, PrivateKey: privatekey, IsManager: isManager}
-	if err := p.md.SignUpModel(req); err != nil {
+	if err := p.md.UserModel.SignUpModel(req); err != nil {
 		p.RespError(c, nil, http.StatusUnprocessableEntity, "parameter not found", err)
 		return
 	}
