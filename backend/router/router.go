@@ -39,17 +39,34 @@ func (p *Router) Idx() *gin.Engine {
 
 	v1 := e.Group("/v1")
 	{
-		coin := v1.Group("/coin")
-		{
-			coin.POST("/transfer", p.ct.TransferCoin)
-			coin.POST("/transfer/from", p.ct.TransferCoinFrom)
-		}
 		token := v1.Group("/token")
 		{
-			token.GET("/symbol", p.ct.GetTokenSymbol)
-			token.GET("/balance/:address", p.ct.GetTokenBalance)
-			token.POST("/transfer", p.ct.TransferToken)
-			token.POST("/transfer/from", p.ct.TransferTokenFrom)
+			token.GET("/balance", p.ct.GetBalance)
+			token.GET("/welcome", p.ct.Welcome)
+		}
+		game := v1.Group("/game")
+		{
+			game.GET("/:id", p.ct.GetGame)
+			game.GET("/list", p.ct.GetGames)
+			game.POST("", p.ct.CreateGame)
+		}
+		bet := v1.Group("/bet")
+		{
+			bet.GET("/", p.ct.GetBets)
+			bet.POST("/away", p.ct.BetAway)
+			bet.POST("/home", p.ct.BetHome)
+		}
+		vote := v1.Group("/vote")
+		{
+			vote.POST("/away", p.ct.VoteAway)
+			vote.POST("/home", p.ct.VoteHome)
+			vote.POST("/void", p.ct.VoteVoid)
+		}
+		login := v1.Group("/login")
+		{
+			login.POST("/signup", p.ct.SignUp)
+			login.POST("/signin", p.ct.SignIn)
+			login.POST("/logout", p.ct.LogOut)
 		}
 	}
 

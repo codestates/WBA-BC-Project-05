@@ -1,6 +1,7 @@
 package Config
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/naoina/toml"
@@ -11,10 +12,15 @@ type Config struct {
 		Port string
 	}
 	Blockchain struct {
-		RpcUrl       string
+		UrlHttp      string
+		UrlWs        string
 		ContractAddr string
 		OwnerAddr    string
-		PrivateKey   string
+		OwnerPK      string
+		TestPK       string
+	}
+	DB struct {
+		Host string
 	}
 }
 
@@ -28,6 +34,7 @@ func NewConfig(fpath string) *Config {
 		if err := toml.NewDecoder(file).Decode(c); err != nil {
 			panic(err)
 		} else {
+			fmt.Println(c)
 			return c
 		}
 	}

@@ -7,6 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"wba-bc-project-05/backend/model"
+	conf "wba-bc-project-05/config"
+	"wba-bc-project-05/contracts"
+
+
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -26,8 +31,7 @@ func main() {
 	md, err := model.NewModel(cf.DB.Host)
 	if err != nil {
 		panic(err)
-	}
-	
+  }
 	nmd, err := model.NewNftModel(cf.DB.Host)
 	if err != nil {
 		panic(err)
@@ -60,13 +64,17 @@ func main() {
 		case err := <-sub.Err():
 			log.Fatal(err)
 		case vLog := <-logs:
-			// 이벤트 로그 데이터 추출
-			fmt.Println("address:", vLog.Address.Hex())
-			fmt.Println("blockHash:", vLog.BlockHash)
-			fmt.Println("blockNumber:", vLog.BlockNumber)
-			fmt.Println("tx hash:", vLog.TxHash)
-			// fmt.Println("data:", vLog.Data)
+    
+			// 이벤트 로그 DB에 저장
+			e := model.EventLog{}
+			e.Address = vLog.Address.Hex()
+			e.BlockHash = vLog.BlockHash.Hex()
+			e.BlockNumber = vLog.BlockNumber
+			e.TxHash = vLog.TxHash.Hex()
+			e.Signature = vLog.Topics[0].Hex()
+			md.EventModel.InsertEventLog(e)
 
+			// 이벤트에 따른 처리
 			switch vLog.Topics[0].String() {
 			case contractAbi.Events["EvCreateGame"].ID.String():
 				saveGameEvent(md, contractAbi, "EvCreateGame", vLog.Data)
@@ -90,7 +98,6 @@ func saveGameEvent(md *model.Model, abi abi.ABI, name string, data []byte) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// DB에 저장
 	gameForDB, err := md.GameModel.ConvertToDB(game.Game)
 	if err != nil {
 		log.Fatal(err)
@@ -107,7 +114,6 @@ func saveBetEvent(md *model.Model, abi abi.ABI, name string, data []byte) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// DB에 저장
 	betForDB, err := md.BetModel.ConvertToDB(bet.Bet)
 	if err != nil {
 		log.Fatal(err)
@@ -124,7 +130,6 @@ func saveVoteEvent(md *model.Model, abi abi.ABI, name string, data []byte) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// DB에 저장
 	voteForDB, err := md.VoteModel.ConvertToDB(vote.Vote)
 	if err != nil {
 		log.Fatal(err)
@@ -134,6 +139,7 @@ func saveVoteEvent(md *model.Model, abi abi.ABI, name string, data []byte) {
 		log.Fatal(err)
 	}
 }
+
 
 func saveMintEvent(md *model.Model, abi abi.ABI, name string, data []byte) {
 	mint := model.MintWrapper{}
@@ -150,6 +156,23 @@ func saveMintEvent(md *model.Model, abi abi.ABI, name string, data []byte) {
 		log.Fatal(err)
 	}
 }
+
+func saveResultEvent(md *model.Model, abi abi.ABI, name string, data []byte) {
+	result := model.Result{}
+	err := abi.UnpackIntoInterface(&result, name, data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	resultForDB, err := md.ResultModel.ConvertForDB(result)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = md.ResultModel.Insert(resultForDB)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 
 func savePurchaseEvent(md *model.Model, abi abi.ABI, name string, data []byte) {
 	purchase := model.PurchaseWrapper{}
@@ -178,6 +201,19 @@ func saveRevealEvent(md *model.Model, abi abi.ABI, name string, data []byte) {
 		log.Fatal(err)
 	}
 	err = nmd.RevealModel.Insert(revealForDB)
+
+func saveTransferEvent(md *model.Model, abi abi.ABI, name string, topics []common.Hash, data []byte) {
+	te := model.TransferEvent{}
+	err := abi.UnpackIntoInterface(&te, name, data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tedb := model.TransferEventForDB{}
+	tedb.From = "0x" + topics[1].String()[26:]
+	tedb.To = "0x" + topics[2].String()[26:]
+	tedb.Value = te.Value.String()
+	err = md.EventModel.InsertTransferEvent(tedb)
+
 	if err != nil {
 		log.Fatal(err)
 	}
