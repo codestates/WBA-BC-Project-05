@@ -1,11 +1,11 @@
 package controller
 
 import (
-	"WBA-BC-Project-05/library/jwt"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"wba-bc-project-05/backend/model"
+	"wba-bc-project-05/library/jwt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,18 +16,18 @@ func (p *Controller) RespError(c *gin.Context, body interface{}, status int, err
 	fmt.Println("Request error", "path", c.FullPath(), "body", bytes, "status", status, "error", err)
 
 	c.JSON(status, gin.H{
-		"Error": "Request Error",
-		"path": c.FullPath(),
-		"body": bytes,
+		"Error":  "Request Error",
+		"path":   c.FullPath(),
+		"body":   bytes,
 		"status": status,
-		"error": err,
+		"error":  err,
 	})
 	c.Abort()
 }
 
 type SigninParam struct {
-	ID    string    `json:"id" bson:"id"`
-	Pw    string    `json:"pw" bson:"pw"`
+	ID string `json:"id" bson:"id"`
+	Pw string `json:"pw" bson:"pw"`
 }
 
 // Signin - 로그인 메서드
@@ -72,8 +72,8 @@ func (p *Controller) SignIn(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"status": 200,
-		"message": "토큰 발급 완료",
+		"status":       200,
+		"message":      "토큰 발급 완료",
 		"refreshToken": refreshToken,
 		"accessToken":  accessToken,
 	})
