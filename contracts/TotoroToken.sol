@@ -34,10 +34,11 @@ contract TotoroToken is IERC20 {
     }
 
     // 가입 축하금
-    function welcomeToken() external {
+    function welcomeToken() external returns (bool) {
         require(welcomeUser[msg.sender] == false, "Aready Welcomed");
-        _transferFrom(owner, msg.sender, 100 ** decimals);
+        _transferFromOwner(msg.sender, 100e18);
         welcomeUser[msg.sender] = true;
+        return true;
     }
 
     function getSymbol() external view returns (string memory) {
@@ -70,6 +71,20 @@ contract TotoroToken is IERC20 {
         balanceOf[sender] -= amount;
         balanceOf[recipient] += amount;
         emit Transfer(sender, recipient, amount);
+        return true;
+    }
+
+    function _transferFromOwner(address recipient, uint amount) internal returns (bool) {
+        balanceOf[owner] -= amount;
+        balanceOf[recipient] += amount;
+        emit Transfer(owner, recipient, amount);
+        return true;
+    }
+
+    function _transferToOwner(address sender, uint amount) internal returns (bool) {
+        balanceOf[sender] -= amount;
+        balanceOf[owner] += amount;
+        emit Transfer(sender, owner, amount);
         return true;
     }
 

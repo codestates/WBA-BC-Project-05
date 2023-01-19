@@ -54,7 +54,7 @@ contract TotoroGame is TotoroToken {
         require(_betEndDate < _voteEndDate, "Invalid VoteEndDate");
 
         // 게임 생성자에게 수수료 부과?
-        _transferFrom(msg.sender, owner, createFee);
+        _transferToOwner(msg.sender, createFee);
 
         // 게임 생성
         uint newGameId = games.length;
@@ -65,8 +65,8 @@ contract TotoroGame is TotoroToken {
         // 게임 생성자 주소 => 게임 아이디 매핑
         ownerGames[msg.sender].push(newGameId);
 
-        // 게임 마감 시, 지급해야 할 최대 상금 저장
-        _transferFrom(msg.sender, owner, _maxRewardAmount);
+        // 게임 마감 시, 지급해야 할 최대 상금 전달
+        _transferToOwner(msg.sender, _maxRewardAmount);
 
         // 게임 생성 성공 이벤트
         emit EvCreateGame(games[newGameId]);

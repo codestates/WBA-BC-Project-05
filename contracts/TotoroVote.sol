@@ -78,7 +78,7 @@ contract TotoroVote is TotoroBet {
         // 투표 성공 이벤트
         emit EvVote(votes[newVoteId]);
         // 투표자에게 보상 지급
-        _transferFrom(owner, msg.sender, voteReward);
+        _transferFromOwner(msg.sender, voteReward);
 
         return true;
     }
@@ -106,12 +106,12 @@ contract TotoroVote is TotoroBet {
             if (bet.target == VOTE_TARGET_HOME) {
                 uint reward = bet.amount * odds;
                 // 베팅 적중에 따른 보상
-                _transferFrom(owner, bet.bettor, reward);
+                _transferFromOwner(bet.bettor, reward);
                 accReward -= reward;
             }
         }
         // 남은 상금은 게임 생성자에게 전달
-        _transferFrom(owner, games[_gameId].creator, games[_gameId].awayAccReward + accReward);
+        _transferFromOwner(games[_gameId].creator, games[_gameId].awayAccReward + accReward);
     }
 
     // 원정팀 승리 처리 함수
@@ -125,24 +125,24 @@ contract TotoroVote is TotoroBet {
             if (bet.target == VOTE_TARGET_AWAY) {
                 // 베팅 적중에 따른 보상
                 uint reward = bet.amount * odds;
-                _transferFrom(owner, bet.bettor, reward);
+                _transferFromOwner(bet.bettor, reward);
                 accReward -= reward;
             }
         }
         // 남은 상금은 게임 생성자에게 전달
-        _transferFrom(owner, games[_gameId].creator, games[_gameId].homeAccReward + accReward);
+        _transferFromOwner(games[_gameId].creator, games[_gameId].homeAccReward + accReward);
     }
 
     // 무효 처리 함수
     function winVoid(uint _gameId) internal {
         // 게임 생성자의 동결된 자금 반환
-        _transferFrom(owner, games[_gameId].creator, games[_gameId].maxRewardAmount);
+        _transferFromOwner(games[_gameId].creator, games[_gameId].maxRewardAmount);
 
         // 베팅 참여자에게 베팅 금액 반환
         uint[] memory gameBets = gameIdbetIds[_gameId];
         for (uint i=0; i<gameBets.length; i++) {
             Bet memory bet = bets[gameBets[i]];
-            _transferFrom(owner, bet.bettor, bet.amount);
+            _transferFromOwner(bet.bettor, bet.amount);
         }
     }
 

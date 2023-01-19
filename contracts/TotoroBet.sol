@@ -64,7 +64,7 @@ contract TotoroBet is TotoroGame {
         // 베팅자 => 베팅 아이디 추가
         ownerBets[msg.sender].push(newBetId);
         // 베터의 잔액 차감
-        _transferFrom(msg.sender, owner, _amount);
+        _transferToOwner(msg.sender, _amount);
         // 게임의 누적 베팅 금액 증가
         games[_gameId].maxRewardHomeAcc += winReward;
         // 홈 승리 베터 리스트에 추가
@@ -94,7 +94,7 @@ contract TotoroBet is TotoroGame {
         // 베팅자 => 베팅 아이디 추가
         ownerBets[msg.sender].push(newBetId);
         // 베터의 잔액 차감
-        _transferFrom(msg.sender, owner, _amount);
+        _transferToOwner(msg.sender, _amount);
         // 게임의 누적 베팅 금액 증가
         games[_gameId].maxRewardAwayAcc += winReward;
         // 원정 승리 베터 리스트에 추가
