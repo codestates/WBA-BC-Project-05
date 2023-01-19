@@ -12,6 +12,7 @@ type EventLog struct {
 	BlockHash   string `bson:"blackHash"`
 	BlockNumber uint64 `bson:"blackNumber"`
 	TxHash      string `bson:"txHash"`
+	Signature   string `bson:"signature"`
 }
 
 type eventModel struct {
@@ -24,8 +25,8 @@ func NewEventModel(col *mongo.Collection) *eventModel {
 	return m
 }
 
-func (p *eventModel) Save(event *EventLog) error {
-	result, err := p.col.InsertOne(context.TODO(), *event)
+func (p *eventModel) Save(event EventLog) error {
+	result, err := p.col.InsertOne(context.TODO(), event)
 	if err != nil {
 		return err
 	}

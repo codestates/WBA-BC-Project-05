@@ -54,13 +54,16 @@ func main() {
 		case err := <-sub.Err():
 			log.Fatal(err)
 		case vLog := <-logs:
-			// 이벤트 로그 데이터 추출
-			fmt.Println("address:", vLog.Address.Hex())
-			fmt.Println("blockHash:", vLog.BlockHash)
-			fmt.Println("blockNumber:", vLog.BlockNumber)
-			fmt.Println("tx hash:", vLog.TxHash)
-			// fmt.Println("data:", vLog.Data)
+			// 이벤트 로그 DB에 저장
+			e := model.EventLog{}
+			e.Address = vLog.Address.Hex()
+			e.BlockHash = vLog.BlockHash.Hex()
+			e.BlockNumber = vLog.BlockNumber
+			e.TxHash = vLog.TxHash.Hex()
+			e.Signature = vLog.Topics[0].Hex()
+			md.EventModel.Save(e)
 
+			// 이벤트에 따른 처리
 			switch vLog.Topics[0].String() {
 			case contractAbi.Events["EvCreateGame"].ID.String():
 				saveGameEvent(md, contractAbi, "EvCreateGame", vLog.Data)
