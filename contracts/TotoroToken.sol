@@ -33,7 +33,6 @@ contract TotoroToken is IERC20 {
         balanceOf[owner] += 1000000000e18;
     }
 
-    // 가입 축하금
     function welcomeToken() external returns (bool) {
         require(welcomeUser[msg.sender] == false, "Aready Welcomed");
         _transferFromOwner(msg.sender, 100e18);
